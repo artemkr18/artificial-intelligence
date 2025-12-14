@@ -185,26 +185,12 @@ def compute_quality_flags(summary: DatasetSummary, missing_df: pd.DataFrame) -> 
     flags["max_missing_share"] = max_missing_share
     flags["too_many_missing"] = max_missing_share > 0.5
 
-    # Константные колонки 
-    constant_count = sum(1 for n in summary.nunique_per_col if n == 1)
-    flags["has_constant_columns"] = constant_count > 0
-    flags["constant_columns_count"] = constant_count
-
-    # Много нулевых значений
-    zero_cols = missing_df[missing_df["missing_share"] > 0.5]
-    flags["has_many_zero_values"] = len(zero_cols) > 0
-    flags["max_zero_share"] = float(zero_cols["missing_share"].max() if not zero_cols.empty else 0.0)
-
     # Простейший «скор» качества
     score = 1.0
     score -= max_missing_share  # чем больше пропусков, тем хуже
     if summary.n_rows < 100:
         score -= 0.2
     if summary.n_cols > 100:
-        score -= 0.1
-    if flags["has_constant_columns"]:
-        score -= 0.1
-    if flags["has_many_zero_values"]:
         score -= 0.1
 
     score = max(0.0, min(1.0, score))
