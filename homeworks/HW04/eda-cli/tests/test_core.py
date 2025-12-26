@@ -2,9 +2,6 @@ from __future__ import annotations
 
 import pandas as pd
 
-#для теста эвристики (флаг, показывающий, есть ли колонки, где все значения одинаковые)
-from eda_cli.core import summarize_dataset, has_constant_columns
-
 from eda_cli.core import (
     compute_quality_flags,
     correlation_matrix,
@@ -21,6 +18,15 @@ def _sample_df() -> pd.DataFrame:
             "age": [10, 20, 30, None],
             "height": [140, 150, 160, 170],
             "city": ["A", "B", "A", None],
+        }
+    )
+
+def _second_df() -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "user_id": [1, 2, 3, 4, 5],
+            "age": [0, 15, 0, 43, 0],
+            "happiness": [0.78, None, None, None, 0.11]
         }
     )
 
@@ -63,22 +69,13 @@ def test_correlation_and_top_categories():
     assert "value" in city_table.columns
     assert len(city_table) <= 2
 
-# новые тесты
-def test_has_constant_columns_true():
-    df = pd.DataFrame({
-        "A": [1, 1, 1],
-        "B": [1, 2, 3],
-    })
+def test_latest_created_heuristics():
+    df = _second_df()
+
+    missing_df = missing_table(df)
     summary = summarize_dataset(df)
+    flags = compute_quality_flags(summary, missing_df, df)
 
-    assert has_constant_columns(summary) is True
-
-
-def test_has_constant_columns_false():
-    df = pd.DataFrame({
-        "A": [1, 2, 3],
-        "B": [4, 5, 6],
-    })
-    summary = summarize_dataset(df)
-
-    assert has_constant_columns(summary) is False
+    assert flags["has_suspicious_id_duplicates"] == False
+    assert flags["too_many_missing"] == True
+    assert flags["too_many_zero_values"] == True

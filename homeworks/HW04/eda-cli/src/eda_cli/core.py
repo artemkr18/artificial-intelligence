@@ -179,15 +179,25 @@ def compute_quality_flags(summary: DatasetSummary, missing_df: pd.DataFrame, df:
     """
     flags: Dict[str, Any] = {}
     flags["too_few_rows"] = summary.n_rows < 100
-    flags["too_many_columns"] = summary.n_cols > 100
-
+    flags["too_many_columns"] = summary.n_cols > 100  
+    
+    numeric_df = df.select_dtypes(include="number")
+    max_zero_values = float((numeric_df == 0).mean().max()) if not numeric_df.empty else 0.0
     max_missing_share = float(missing_df["missing_share"].max()) if not missing_df.empty else 0.0
+    max_missing_count = missing_df["missing_count"].max() if not missing_df.empty else 0
+
+    has_suspicious_id_duplicates = False
+    for col in summary.columns:
+        if (col.name == "user_id") and (col.unique != summary.n_rows):
+            has_suspicious_id_duplicates = True
+            break
+
     flags["max_missing_share"] = max_missing_share
     flags["too_many_missing"] = max_missing_share > 0.5
-
-    # новые эвристики
-    flags["has_constant_columns"] = has_constant_columns(summary)
-    flags["has_suspicious_id_duplicates"] = has_suspicious_id_duplicates(df)
+    flags["too_many_zero_values"] = max_zero_values > 0.5
+    flags["max_zero_values"] = max_zero_values
+    flags["max_missing_count"] = max_missing_count
+    flags["has_suspicious_id_duplicates"] = has_suspicious_id_duplicates
 
     # Простейший «скор» качества
     score = 1.0
@@ -196,6 +206,10 @@ def compute_quality_flags(summary: DatasetSummary, missing_df: pd.DataFrame, df:
         score -= 0.2
     if summary.n_cols > 100:
         score -= 0.1
+    if max_zero_values > 0.5:
+        score -= 0.05
+    if has_suspicious_id_duplicates:
+        score -= 0.2
 
     score = max(0.0, min(1.0, score))
     flags["quality_score"] = score
@@ -225,21 +239,3 @@ def flatten_summary_for_print(summary: DatasetSummary) -> pd.DataFrame:
             }
         )
     return pd.DataFrame(rows)
-
-# эвристика: флаг, показывающий, есть ли колонки, где все значения одинаковые
-def has_constant_columns(summary: DatasetSummary) -> bool:
-    for col in summary.columns:
-        if col.non_null > 0 and col.unique == 1:
-            return True
-    return False
-
-
-# эвристика: проверка, что идентификатор (например, user_id) уникален; при наличии дубликатов выставлять флаг.
-def has_suspicious_id_duplicates(df: pd.DataFrame) -> bool:
-    id_candidates = ["id", "user_id"]
-
-    for col in id_candidates:
-        if col in df.columns:
-            return df[col].duplicated().any()
-
-    return False
