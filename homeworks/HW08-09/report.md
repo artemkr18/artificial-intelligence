@@ -8,7 +8,7 @@
 
 ## 2. Среда и воспроизводимость
 
-- Python: 3.13
+- Python: 3.12
 - torch / torchvision:
 - Устройство: CPU
 - Seed: 42
