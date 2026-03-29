@@ -2,6 +2,6 @@ experiment_id,task,dataset,seed,model_summary,optimizer,lr,epochs_trained,best_v
 C1,classification,CIFAR100,42,SimpleCNN no aug,"('Adam',)",0.001,15.0,0.4029,2.3828457321166994,,,,,,Simple CNN without augmentations
 C2,classification,CIFAR100,42,SimpleCNN with aug,"('Adam',)",0.001,15.0,0.443,2.114840143585205,,,,,,Simple CNN with augmentations
 C3,classification,CIFAR100,42,ResNet18 head-only,"('Adam',)",0.001,1.0,0.5139,1.8183794870376586,,,,,,Pretrained ResNet18 backbone frozen
-C4,classification,CIFAR100,42,ResNet18 fine-tune,"('Adam',)",layer4:1e-4 fc:1e-3,1.0,0.6238,1.3051046646118165,0.6261,1.2942640924453734,,,,Pretrained ResNet18 fine-tuning layer4 and fc
+C4,classification,CIFAR100,42,ResNet18 fine-tune,"('Adam',)",0.0001,1.0,0.6238,1.3051046646118165,0.6261,1.2942640924453734,,,,Pretrained ResNet18 fine-tuning layer4 and fc
 V1,segmentation,Pascal VOC,42,DeepLabV3_ResNet50,,,,,,,,,,0.690982,Baseline
 V2,segmentation,Pascal VOC,42,DeepLabV3_ResNet50,,,,,,,,,,0.690738,Postprocess
